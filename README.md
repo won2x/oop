@@ -1,1 +1,1 @@
-Seminar objektno orijentirano programiranje# oop
+Seminar objektno orijentirano programiranje
