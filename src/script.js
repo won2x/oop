@@ -1,72 +1,122 @@
-var block=document.getElementById("block");
-var hole=document.getElementById("hole");
-var character=document.getElementById("character");
-var jumping=0;
-var counter=0;
-var highscores = [];
-var gameInterval = null;
-var gameStarted = false;
+class Bird {
+    constructor() {
+        
+        this.bird = document.getElementById("bird");
+        this.jumping = false;
+    }
+
+    get top() {
+        return parseInt(getComputedStyle(this.bird).top);
+    }
+
+    gravity() {
+        this.bird.style.top = this.top + 3 + "px";
+    }
+
+    jump() {
+    let jumpCount = 0;
+
+    const interval = setInterval(() => {
+        if (this.top > 6 && jumpCount < 15) {
+            this.bird.style.top = this.top - 8 + "px";
+        }
+
+        if (jumpCount > 20) {
+            clearInterval(interval);
+        }
+
+        jumpCount++;
+    }, 10);
+}
 
 
-hole.addEventListener('animationiteration',()=>{
-    var random=-((Math.random()*500)+150);
-    hole.style.top= random+"px";
+    reset() {
+        this.bird.style.top = "100px";
+    }
+}
+
+
+class Pipe {
+    constructor() {
+        
+        this.pipe = document.getElementById("pipe");
+        this.hole = document.getElementById("hole");
+    }
+
+    get left() {
+        return parseInt(getComputedStyle(this.pipe).left);
+    }
+
+    get holeTop() {
+        return parseInt(getComputedStyle(this.hole).top);
+    }
+
+    randomizeHole() {
+        const random = -((Math.random() * 400) + 150);
+        this.hole.style.top = random + "px";
+    }
+}
+
+
+const bird = new Bird();
+const pipe = new Pipe();
+
+let counter = 0;
+let highscores = [];
+let gameStarted = false;
+
+
+document.getElementById("hole").addEventListener("animationiteration", () => {
+    pipe.randomizeHole();
     counter++;
+    document.getElementById("score").textContent = "Score: " + (counter - 1);
 });
 
-function startGame(){
-    if(gameStarted) 
-        return;
+
+document.getElementById("startScreen").addEventListener("click", () => {
+    if (gameStarted) return;
 
     gameStarted = true;
     document.getElementById("startScreen").style.display = "none";
 
-    gameInterval =setInterval(function(){
-    var characterTop = parseInt(window.getComputedStyle(character).getPropertyValue("top"));
-    if(jumping==0){
-        character.style.top = (characterTop+3)+"px";
-    }
-    var blockLeft = parseInt(window.getComputedStyle(block).getPropertyValue("left"));
-    var holeTop = parseInt(window.getComputedStyle(hole).getPropertyValue("top"));
-    var cTop = -(600-characterTop);
-    if((characterTop>560)||((blockLeft<60)&&(blockLeft>-90)&&((cTop<holeTop)||(cTop+38>holeTop+200)))){
-        highscores.push(counter-1);
-        highscores.sort((a,b)=>b-a);
-        if(highscores.length > 5) 
-            highscores.pop();
-        updateHighscores();
-        alert("Game over. Score: "+(counter-1));
-        
-        character.style.top = 100 + "px";
-        counter=0;
-    }
-},10);
-}
+    setInterval(() => {
+        bird.gravity();
 
+        const bTop = -(600 - bird.top);
 
+        if (
+            bird.top > 560 ||
+            (
+                pipe.left < 60 &&
+                pipe.left > -90 &&
+                (bTop < pipe.holeTop || bTop + 38 > pipe.holeTop + 200)
+            )
+        ) {
+            highscores.push(counter - 1);
+            highscores.sort((a, b) => b - a);
+            if (highscores.length > 5) highscores.pop();
 
-function jump(){
-    jumping = 1;
-    let jumpCount = 0;
-    var jumpInterval = setInterval(function(){
-        var characterTop = parseInt(window.getComputedStyle(character).getPropertyValue("top"));
-        if((characterTop>6)&&(jumpCount<15)){
-            character.style.top = (characterTop-5)+"px";
+            updateHighscores();
+            alert("Game over. Score: " + (counter - 1));
+
+            bird.reset();
+            counter = 0;
+            document.getElementById("score").textContent = "Score: 0";
         }
-        if(jumpCount>20){
-            clearInterval(jumpInterval);
-            jumping=0;
-            jumpCount=0;
-        }
-        jumpCount++;
-    },10);
-}
+    }, 10);
+});
 
-function updateHighscores(){
-    var list = document.getElementById("highscoresList");
+
+document.addEventListener("click", () => bird.jump());
+document.addEventListener("keydown", () => bird.jump());
+
+
+function updateHighscores() {
+    const list = document.getElementById("highscoresList");
     list.innerHTML = "";
+
     highscores.forEach(score => {
-        var li = document.createElement("li");
+        const li = document.createElement("li");
         li.textContent = score;
         list.appendChild(li);
     });
